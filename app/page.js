@@ -87,21 +87,71 @@ async function compressToTarget(file) {
 const styles = {
   page: {
     minHeight: "100vh",
-    background: "linear-gradient(180deg, #0b0d10 0%, #111418 100%)",
+    background:
+      "radial-gradient(1200px 600px at 10% -10%, rgba(26,115,232,0.18), transparent 60%), radial-gradient(900px 500px at 100% 0%, rgba(129,201,149,0.12), transparent 60%), linear-gradient(180deg, #0a0c0f 0%, #0f1216 100%)",
     color: "#e8eaed",
+    display: "flex",
+    flexDirection: "column",
   },
-  wrap: { maxWidth: 1080, margin: "0 auto", padding: "40px 24px 80px" },
-  h1: { fontSize: 32, margin: 0, fontWeight: 700, letterSpacing: -0.5 },
-  sub: { color: "#9aa0a6", marginTop: 8, fontSize: 15 },
+  wrap: { maxWidth: 1120, width: "100%", margin: "0 auto", padding: "48px 24px 40px", flex: 1 },
+  header: { display: "flex", alignItems: "center", gap: 14, marginBottom: 6 },
+  logo: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    background: "linear-gradient(135deg, #1a73e8 0%, #7c3aed 100%)",
+    display: "grid",
+    placeItems: "center",
+    fontSize: 22,
+    boxShadow: "0 8px 24px rgba(26,115,232,0.35)",
+  },
+  h1: {
+    fontSize: 34,
+    margin: 0,
+    fontWeight: 800,
+    letterSpacing: -0.8,
+    background: "linear-gradient(135deg, #ffffff 0%, #a8c7fa 100%)",
+    WebkitBackgroundClip: "text",
+    WebkitTextFillColor: "transparent",
+  },
+  sub: { color: "#9aa0a6", marginTop: 6, fontSize: 15, marginLeft: 58 },
+  pill: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 6,
+    background: "rgba(129,201,149,0.12)",
+    color: "#81c995",
+    padding: "4px 10px",
+    borderRadius: 999,
+    fontSize: 12,
+    fontWeight: 600,
+    marginLeft: 58,
+    marginTop: 10,
+    border: "1px solid rgba(129,201,149,0.2)",
+  },
+  footer: {
+    borderTop: "1px solid #1e2227",
+    padding: "16px 28px",
+    textAlign: "right",
+    color: "#6b7075",
+    fontSize: 12,
+    background: "rgba(0,0,0,0.25)",
+    backdropFilter: "blur(6px)",
+  },
+  heart: { color: "#f28b82" },
   drop: (drag) => ({
-    marginTop: 24,
-    border: `2px dashed ${drag ? "#1a73e8" : "#3c4043"}`,
-    borderRadius: 14,
-    padding: 48,
+    marginTop: 28,
+    border: `2px dashed ${drag ? "#8ab4f8" : "#2a2d31"}`,
+    borderRadius: 18,
+    padding: 56,
     textAlign: "center",
     cursor: "pointer",
-    background: drag ? "#14233a" : "#16181c",
-    transition: "all .15s ease",
+    background: drag
+      ? "linear-gradient(180deg, rgba(26,115,232,0.18), rgba(26,115,232,0.08))"
+      : "linear-gradient(180deg, rgba(22,24,28,0.8), rgba(17,20,24,0.8))",
+    backdropFilter: "blur(8px)",
+    transition: "all .2s ease",
+    boxShadow: drag ? "0 0 0 4px rgba(26,115,232,0.15)" : "0 1px 0 rgba(255,255,255,0.02) inset",
   }),
   toolbar: {
     display: "flex",
@@ -111,15 +161,17 @@ const styles = {
     flexWrap: "wrap",
   },
   btn: (primary, disabled) => ({
-    background: primary ? "#1a73e8" : "#2a2d31",
+    background: primary ? "linear-gradient(135deg, #1a73e8, #4285f4)" : "#24272c",
     color: "#fff",
     border: "none",
-    padding: "10px 16px",
-    borderRadius: 8,
+    padding: "11px 18px",
+    borderRadius: 10,
     cursor: disabled ? "not-allowed" : "pointer",
-    opacity: disabled ? 0.5 : 1,
+    opacity: disabled ? 0.45 : 1,
     fontSize: 14,
     fontWeight: 600,
+    boxShadow: primary ? "0 6px 18px rgba(26,115,232,0.35)" : "none",
+    transition: "transform .1s ease, box-shadow .1s ease",
   }),
   stat: { color: "#9aa0a6", fontSize: 13 },
   grid: {
@@ -129,12 +181,14 @@ const styles = {
     gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
   },
   card: {
-    background: "#16181c",
-    border: "1px solid #2a2d31",
-    borderRadius: 12,
+    background: "linear-gradient(180deg, #16181c 0%, #121418 100%)",
+    border: "1px solid #23262b",
+    borderRadius: 14,
     overflow: "hidden",
     display: "flex",
     flexDirection: "column",
+    boxShadow: "0 10px 30px rgba(0,0,0,0.35)",
+    transition: "transform .15s ease, border-color .15s ease",
   },
   thumb: {
     width: "100%",
@@ -162,16 +216,17 @@ const styles = {
   actions: { display: "flex", gap: 8 },
   smallBtn: {
     flex: 1,
-    background: "#1a73e8",
+    background: "linear-gradient(135deg, #1a73e8, #4285f4)",
     color: "#fff",
     border: "none",
-    padding: "8px",
-    borderRadius: 6,
+    padding: "9px",
+    borderRadius: 8,
     cursor: "pointer",
     fontSize: 13,
     fontWeight: 600,
     textDecoration: "none",
     textAlign: "center",
+    boxShadow: "0 4px 12px rgba(26,115,232,0.3)",
   },
   ghostBtn: {
     background: "#2a2d31",
@@ -323,12 +378,19 @@ export default function Page() {
 
   return (
     <main style={styles.page}>
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+      `}</style>
       <div style={styles.wrap}>
-        <h1 style={styles.h1}>Fast Image Compressor</h1>
+        <div style={styles.header}>
+          <div style={styles.logo}>⚡</div>
+          <h1 style={styles.h1}>Fast Image Compressor</h1>
+        </div>
         <p style={styles.sub}>
-          Drop images — each one shrinks to 300–400 KB while keeping full resolution. Runs entirely in your browser.
+          Drop images — each shrinks to 300–400 KB while keeping full resolution. 100% offline, runs in your browser.
         </p>
+        <div style={styles.pill}>● Private · No uploads · Instant</div>
 
         <div
           onDragOver={(e) => {
@@ -379,7 +441,7 @@ export default function Page() {
 
         <div style={styles.grid}>
           {items.map((i) => (
-            <div key={i.id} style={styles.card}>
+            <div key={i.id} style={{ ...styles.card, animation: "fadeIn .25s ease both" }}>
               <img src={i.compressedUrl || i.originalUrl} alt={i.originalName} style={styles.thumb} />
               <div style={styles.cardBody}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -452,6 +514,9 @@ export default function Page() {
           ))}
         </div>
       </div>
+      <footer style={styles.footer}>
+        Made with <span style={styles.heart}>♥</span> by <strong style={{ color: "#e8eaed" }}>Rohit Joshi</strong>
+      </footer>
     </main>
   );
 }

@@ -2,8 +2,8 @@
 
 import { useCallback, useRef, useState } from "react";
 import JSZip from "jszip";
-import UPNG from "upng-js";
 
+const TARGET_KB_MIN = 300;
 const TARGET_KB_MAX = 400;
 
 function formatKB(bytes) {
@@ -34,49 +34,54 @@ async function loadBitmap(file) {
   }
 }
 
+function canvasToBlob(canvas, type, quality) {
+  return new Promise((res) => canvas.toBlob((b) => res(b), type, quality));
+}
+
 async function compressToTarget(file) {
   const bitmap = await loadBitmap(file);
   const w = bitmap.width;
   const h = bitmap.height;
-  const MAX = TARGET_KB_MAX * 1024;
-  const MIN = 300 * 1024;
 
-  // Draw at full resolution to get raw RGBA.
-  const canvas = document.createElement("canvas");
-  canvas.width = w;
-  canvas.height = h;
+  const canvas =
+    typeof OffscreenCanvas !== "undefined"
+      ? new OffscreenCanvas(w, h)
+      : Object.assign(document.createElement("canvas"), { width: w, height: h });
+  if (canvas.width !== w) canvas.width = w;
+  if (canvas.height !== h) canvas.height = h;
+
   const ctx = canvas.getContext("2d");
+  const outType = "image/jpeg";
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, w, h);
   ctx.drawImage(bitmap, 0, 0);
   if (bitmap.close) bitmap.close();
-  const imgData = ctx.getImageData(0, 0, w, h);
 
-  // Binary search the palette size (cnum) to hit 300–400 KB at FULL resolution.
-  // cnum=0 → lossless PNG (big). cnum=2..256 → palette PNG (much smaller).
-  let lo = 2,
-    hi = 256;
-  let best = null;
-  for (let i = 0; i < 8; i++) {
-    const cnum = Math.round((lo + hi) / 2);
-    const ab = UPNG.encode([imgData.data.buffer], w, h, cnum);
-    const size = ab.byteLength;
-    if (size > MAX) {
-      hi = cnum - 1;
-    } else {
-      best = { ab, size, cnum };
-      if (size >= MIN) break;
-      lo = cnum + 1;
+  const toBlob = async (q) => {
+    if (canvas.convertToBlob) return canvas.convertToBlob({ type: outType, quality: q });
+    return canvasToBlob(canvas, outType, q);
+  };
+
+  const MAX = TARGET_KB_MAX * 1024;
+  const MIN = TARGET_KB_MIN * 1024;
+
+  let lo = 0.3,
+    hi = 0.95;
+  let best = await toBlob(hi);
+  if (best.size <= MAX) {
+    return { blob: best, width: w, height: h, origWidth: w, origHeight: h };
+  }
+  for (let i = 0; i < 7; i++) {
+    const mid = (lo + hi) / 2;
+    const blob = await toBlob(mid);
+    if (blob.size > MAX) hi = mid;
+    else {
+      best = blob;
+      if (blob.size >= MIN) break;
+      lo = mid;
     }
-    if (lo > hi) break;
   }
-
-  // Fallback: if nothing fit (extreme case), take the smallest palette.
-  if (!best) {
-    const ab = UPNG.encode([imgData.data.buffer], w, h, 2);
-    best = { ab, size: ab.byteLength, cnum: 2 };
-  }
-
-  const blob = new Blob([best.ab], { type: "image/png" });
-  return { blob, width: w, height: h, origWidth: w, origHeight: h };
+  return { blob: best, width: w, height: h, origWidth: w, origHeight: h };
 }
 
 const styles = {

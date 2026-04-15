@@ -388,7 +388,7 @@ export default function Page() {
           <h1 style={styles.h1}>Fast Image Compressor</h1>
         </div>
         <p style={styles.sub}>
-          Drop images — each shrinks to 300–400 KB while keeping full resolution. 100% offline, runs in your browser.
+          Upload images — each shrinks to 300–400 KB while keeping full resolution. Works live in your browser.
         </p>
         <div style={styles.pill}>● Private · No uploads · Instant</div>
 
